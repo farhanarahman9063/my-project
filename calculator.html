@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CalcX – Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --card: #222;
+      --border: #2e2e2e;
+      --accent: #00e5ff;
+      --accent2: #00b8d4;
+      --text: #ffffff;
+      --muted: #666;
+      --btn-num: #252525;
+      --btn-op: #1a2a2e;
+      --btn-eq: #00e5ff;
+      --btn-clear: #2e1a1a;
+    }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Mono', monospace;
+      padding: 2rem 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* Glow */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(0,229,255,0.06) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    /* HEADER */
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+      animation: fadeDown 0.5s ease forwards;
+      position: relative; z-index: 1;
+    }
+
+    .header-tag {
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3.5rem;
+      color: var(--text);
+      letter-spacing: 0.1em;
+      line-height: 1;
+    }
+
+    .header h1 span { color: var(--accent); }
+
+    /* CALCULATOR */
+    .calc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 340px;
+      box-shadow: 0 0 40px rgba(0,229,255,0.08), 0 20px 60px rgba(0,0,0,0.5);
+      position: relative; z-index: 1;
+      animation: fadeUp 0.5s 0.1s ease both;
+    }
+
+    /* DISPLAY */
+    .display {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem 1.4rem;
+      margin-bottom: 1.2rem;
+      min-height: 90px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-end;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .display::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.4;
+    }
+
+    .display-expr {
+      font-size: 0.75rem;
+      color: var(--muted);
+      min-height: 1.2em;
+      word-break: break-all;
+      text-align: right;
+      margin-bottom: 0.3rem;
+    }
+
+    .display-main {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--text);
+      word-break: break-all;
+      text-align: right;
+      line-height: 1.1;
+      transition: color 0.2s;
+    }
+
+    .display-main.accent { color: var(--accent); }
+
+    /* HISTORY */
+    .history {
+      font-size: 0.62rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+      text-align: right;
+      min-height: 1em;
+    }
+
+    /* BUTTONS GRID */
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.6rem;
+    }
+
+    .btn {
+      padding: 1rem 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: 'Space Mono', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: white;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .btn:active::after { opacity: 0.07; }
+    .btn:active { transform: scale(0.94); }
+
+    /* Button types */
+    .btn-num {
+      background: var(--btn-num);
+      color: var(--text);
+    }
+    .btn-num:hover { background: #2e2e2e; border-color: #3e3e3e; }
+
+    .btn-op {
+      background: var(--btn-op);
+      color: var(--accent);
+      border-color: rgba(0,229,255,0.15);
+    }
+    .btn-op:hover { background: rgba(0,229,255,0.1); border-color: rgba(0,229,255,0.3); }
+
+    .btn-clear {
+      background: var(--btn-clear);
+      color: #ff5252;
+      border-color: rgba(255,82,82,0.15);
+    }
+    .btn-clear:hover { background: rgba(255,82,82,0.1); border-color: rgba(255,82,82,0.3); }
+
+    .btn-eq {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(0,229,255,0.3);
+    }
+    .btn-eq:hover { background: var(--accent2); box-shadow: 0 0 30px rgba(0,229,255,0.4); }
+
+    .btn-zero { grid-column: span 2; }
+
+    .btn-del {
+      background: #1e1e2e;
+      color: #7c7cff;
+      border-color: rgba(124,124,255,0.15);
+    }
+    .btn-del:hover { background: rgba(124,124,255,0.1); }
+
+    /* FOOTER */
+    .credit {
+      margin-top: 1.5rem;
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-align: center;
+      position: relative; z-index: 1;
+      animation: fadeUp 0.5s 0.3s ease both;
+    }
+
+    .credit span { color: var(--accent); }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-15px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Error shake */
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .shake { animation: shake 0.3s ease; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <span class="header-tag">✦ javascript calculator</span>
+    <h1>Calc<span>X</span></h1>
+  </div>
+
+  <div class="calc">
+    <div class="display" id="display">
+      <div class="display-expr" id="expr"></div>
+      <div class="display-main" id="main">0</div>
+    </div>
+    <div class="history" id="history">— ready —</div>
+
+    <div class="buttons">
+      <!-- Row 1 -->
+      <button class="btn btn-clear" onclick="clearAll()">AC</button>
+      <button class="btn btn-del" onclick="deleteLast()">⌫</button>
+      <button class="btn btn-op" onclick="inputOp('%')">%</button>
+      <button class="btn btn-op" onclick="inputOp('/')">÷</button>
+
+      <!-- Row 2 -->
+      <button class="btn btn-num" onclick="inputNum('7')">7</button>
+      <button class="btn btn-num" onclick="inputNum('8')">8</button>
+      <button class="btn btn-num" onclick="inputNum('9')">9</button>
+      <button class="btn btn-op" onclick="inputOp('*')">×</button>
+
+      <!-- Row 3 -->
+      <button class="btn btn-num" onclick="inputNum('4')">4</button>
+      <button class="btn btn-num" onclick="inputNum('5')">5</button>
+      <button class="btn btn-num" onclick="inputNum('6')">6</button>
+      <button class="btn btn-op" onclick="inputOp('-')">−</button>
+
+      <!-- Row 4 -->
+      <button class="btn btn-num" onclick="inputNum('1')">1</button>
+      <button class="btn btn-num" onclick="inputNum('2')">2</button>
+      <button class="btn btn-num" onclick="inputNum('3')">3</button>
+      <button class="btn btn-op" onclick="inputOp('+')">+</button>
+
+      <!-- Row 5 -->
+      <button class="btn btn-num btn-zero" onclick="inputNum('0')">0</button>
+      <button class="btn btn-num" onclick="inputDot()">.</button>
+      <button class="btn btn-eq" onclick="calculate()">=</button>
+    </div>
+  </div>
+
+  <div class="credit">Built by <span>Farhana Akter Mim</span> · HTML CSS JS</div>
+
+  <script>
+    let current = '0';
+    let expression = '';
+    let justCalc = false;
+    let lastResult = '';
+
+    const mainEl = document.getElementById('main');
+    const exprEl = document.getElementById('expr');
+    const histEl = document.getElementById('history');
+
+    function updateDisplay() {
+      mainEl.textContent = current;
+      exprEl.textContent = expression;
+      // Shrink font for long numbers
+      mainEl.style.fontSize = current.length > 10 ? '1.4rem' : current.length > 7 ? '1.8rem' : '2.4rem';
+    }
+
+    function inputNum(n) {
+      if (justCalc) { current = n; expression = ''; justCalc = false; }
+      else if (current === '0' && n !== '.') current = n;
+      else if (current.length < 12) current += n;
+      updateDisplay();
+    }
+
+    function inputDot() {
+      if (justCalc) { current = '0.'; expression = ''; justCalc = false; }
+      else if (!current.includes('.')) current += '.';
+      updateDisplay();
+    }
+
+    function inputOp(op) {
+      justCalc = false;
+      const display = op === '/' ? '÷' : op === '*' ? '×' : op === '-' ? '−' : op;
+      expression = current + ' ' + display + ' ';
+      current = '0';
+      updateDisplay();
+    }
+
+    function calculate() {
+      if (!expression) return;
+      try {
+        // Build real expression
+        const raw = expression.replace('÷', '/').replace('×', '*').replace('−', '-');
+        const full = raw + current;
+        let result = Function('"use strict"; return (' + full + ')')();
+
+        // Handle percentage
+        if (full.includes('%')) {
+          const fixed = full.replace('%', '/100');
+          result = Function('"use strict"; return (' + fixed + ')')();
+        }
+
+        // Round floating point
+        result = parseFloat(result.toFixed(10));
+        if (isNaN(result) || !isFinite(result)) throw new Error();
+
+        histEl.textContent = full.replace(/\//g,'÷').replace(/\*/g,'×').replace(/-/g,'−') + ' = ' + result;
+        lastResult = result.toString();
+        expression = full.replace(/\//g,'÷').replace(/\*/g,'×') + ' =';
+        current = result.toString();
+        justCalc = true;
+        mainEl.classList.add('accent');
+        setTimeout(() => mainEl.classList.remove('accent'), 400);
+      } catch {
+        current = 'Error';
+        expression = '';
+        document.getElementById('display').classList.add('shake');
+        setTimeout(() => document.getElementById('display').classList.remove('shake'), 300);
+        justCalc = true;
+      }
+      updateDisplay();
+    }
+
+    function clearAll() {
+      current = '0'; expression = ''; justCalc = false;
+      histEl.textContent = '— cleared —';
+      updateDisplay();
+    }
+
+    function deleteLast() {
+      if (justCalc) { clearAll(); return; }
+      current = current.length > 1 ? current.slice(0, -1) : '0';
+      updateDisplay();
+    }
+
+    // Keyboard support
+    document.addEventListener('keydown', e => {
+      if (e.key >= '0' && e.key <= '9') inputNum(e.key);
+      else if (e.key === '.') inputDot();
+      else if (e.key === '+') inputOp('+');
+      else if (e.key === '-') inputOp('-');
+      else if (e.key === '*') inputOp('*');
+      else if (e.key === '/') { e.preventDefault(); inputOp('/'); }
+      else if (e.key === '%') inputOp('%');
+      else if (e.key === 'Enter' || e.key === '=') calculate();
+      else if (e.key === 'Backspace') deleteLast();
+      else if (e.key === 'Escape') clearAll();
+    });
+
+    updateDisplay();
+  </script>
+
+</body>
+</html>
