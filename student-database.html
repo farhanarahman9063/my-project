@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StudentDB – Student Database</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8f9ff;
+      --surface: #ffffff;
+      --accent: #4f46e5;
+      --accent2: #7c3aed;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #1e1b4b;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --row-hover: #f5f3ff;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+    /* HEADER */
+    .header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      animation: fadeDown 0.5s ease forwards;
+    }
+    .sql-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(79,70,229,0.1);
+      border: 1px solid rgba(79,70,229,0.3);
+      padding: 0.3rem 0.9rem;
+      border-radius: 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.8rem;
+    }
+    h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; letter-spacing: -0.03em; }
+    h1 span { color: var(--accent); }
+    .subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 0.4rem; }
+
+    /* CONTAINER */
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    /* STATS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.5s 0.1s ease both;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.2rem;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+    .stat-icon { font-size: 1.8rem; margin-bottom: 0.4rem; }
+    .stat-num { font-size: 2rem; font-weight: 800; color: var(--accent); display: block; line-height: 1; }
+    .stat-label { font-size: 0.75rem; color: var(--muted); font-weight: 500; margin-top: 0.2rem; }
+
+    /* TABS */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      animation: fadeUp 0.5s 0.15s ease both;
+    }
+    .tab-btn {
+      padding: 0.5rem 1.2rem;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .tab-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+    /* SEARCH + CONTROLS */
+    .controls {
+      display: flex;
+      gap: 0.8rem;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+      animation: fadeUp 0.5s 0.2s ease both;
+    }
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.65rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s;
+      background: var(--surface);
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .btn {
+      padding: 0.65rem 1.2rem;
+      border-radius: 10px;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+    .btn-danger { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+    .btn-danger:hover { background: rgba(239,68,68,0.2); }
+    .btn-success { background: rgba(16,185,129,0.1); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
+    .btn-success:hover { background: rgba(16,185,129,0.2); }
+
+    /* TABLE CARD */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      animation: fadeUp 0.5s 0.25s ease both;
+    }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    thead { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+    thead th { padding: 0.9rem 1rem; text-align: left; color: white; font-weight: 600; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--row-hover); }
+    tbody td { padding: 0.8rem 1rem; color: var(--text); }
+
+    /* BADGES */
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .badge-active { background: rgba(16,185,129,0.12); color: var(--green); }
+    .badge-inactive { background: rgba(239,68,68,0.12); color: var(--red); }
+    .badge-graduated { background: rgba(79,70,229,0.12); color: var(--accent); }
+    .badge-grade-a { background: rgba(16,185,129,0.12); color: var(--green); }
+    .badge-grade-b { background: rgba(245,158,11,0.12); color: var(--yellow); }
+    .badge-grade-c { background: rgba(239,68,68,0.12); color: var(--red); }
+
+    /* ADD FORM */
+    .add-form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      display: none;
+      animation: fadeUp 0.3s ease both;
+    }
+    .add-form.show { display: block; }
+    .form-title { font-weight: 700; margin-bottom: 1rem; font-size: 1rem; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.8rem; margin-bottom: 1rem; }
+    .form-input {
+      padding: 0.65rem 0.9rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-label { font-size: 0.75rem; font-weight: 600; color: var(--muted); margin-bottom: 0.3rem; display: block; }
+
+    /* EMPTY */
+    .empty { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.9rem; }
+    .empty-icon { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+
+    /* SQL PANEL */
+    .sql-panel {
+      background: #1e1b4b;
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+      animation: fadeUp 0.5s 0.3s ease both;
+    }
+    .sql-title { color: #a5b4fc; font-family: 'DM Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.8rem; }
+    .sql-code { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: #e2e8f0; line-height: 1.7; overflow-x: auto; }
+    .sql-kw { color: #818cf8; }
+    .sql-str { color: #34d399; }
+    .sql-com { color: #64748b; }
+
+    .credit { text-align: center; margin-top: 2rem; font-size: 0.72rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+    .credit span { color: var(--accent); }
+
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-15px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(15px); } to { opacity:1; transform:translateY(0); } }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="sql-badge">🗄️ sql project</div>
+  <h1>Student<span>DB</span></h1>
+  <p class="subtitle">Student Database Management System</p>
+</div>
+
+<div class="container">
+
+  <!-- STATS -->
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('students', this)">👥 Students</button>
+    <button class="tab-btn" onclick="showTab('courses', this)">📚 Courses</button>
+    <button class="tab-btn" onclick="showTab('enrollments', this)">📋 Enrollments</button>
+    <button class="tab-btn" onclick="showTab('grades', this)">🏆 Top Grades</button>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <input class="search-input" id="searchInput" type="text" placeholder="🔍 Search..." oninput="renderTable()"/>
+    <button class="btn btn-primary" onclick="toggleForm()">+ Add Student</button>
+  </div>
+
+  <!-- ADD FORM -->
+  <div class="add-form" id="addForm">
+    <div class="form-title">➕ Add New Student</div>
+    <div class="form-grid">
+      <div><label class="form-label">First Name</label><input class="form-input" id="fFirst" placeholder="First name"/></div>
+      <div><label class="form-label">Last Name</label><input class="form-input" id="fLast" placeholder="Last name"/></div>
+      <div><label class="form-label">Email</label><input class="form-input" id="fEmail" placeholder="Email address"/></div>
+      <div><label class="form-label">Phone</label><input class="form-input" id="fPhone" placeholder="Phone number"/></div>
+      <div><label class="form-label">Gender</label>
+        <select class="form-input" id="fGender">
+          <option>Female</option><option>Male</option><option>Other</option>
+        </select>
+      </div>
+      <div><label class="form-label">Status</label>
+        <select class="form-input" id="fStatus">
+          <option>Active</option><option>Inactive</option><option>Graduated</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:0.6rem;">
+      <button class="btn btn-primary" onclick="addStudent()">Save Student</button>
+      <button class="btn btn-danger" onclick="toggleForm()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-card">
+    <div class="table-wrap">
+      <table id="mainTable">
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SQL PANEL -->
+  <div class="sql-panel">
+    <div class="sql-title">// Sample SQL Query</div>
+    <div class="sql-code" id="sqlDisplay"></div>
+  </div>
+
+</div>
+
+<div class="credit">Built by <span>Farhana Akter Mim</span> · SQL Project</div>
+
+<script>
+  // ---- DATA ----
+  let students = [
+    { id:1,  first:'Farhana', last:'Akter',    email:'farhana@email.com', phone:'01711-111111', gender:'Female', status:'Active',    enroll:'2023-01-10' },
+    { id:2,  first:'Rahim',   last:'Uddin',    email:'rahim@email.com',   phone:'01722-222222', gender:'Male',   status:'Active',    enroll:'2023-01-10' },
+    { id:3,  first:'Priya',   last:'Sen',      email:'priya@email.com',   phone:'01733-333333', gender:'Female', status:'Active',    enroll:'2023-02-01' },
+    { id:4,  first:'Karim',   last:'Hossain',  email:'karim@email.com',   phone:'01744-444444', gender:'Male',   status:'Active',    enroll:'2023-02-01' },
+    { id:5,  first:'Nadia',   last:'Islam',    email:'nadia@email.com',   phone:'01755-555555', gender:'Female', status:'Active',    enroll:'2023-03-05' },
+    { id:6,  first:'Arif',    last:'Khan',     email:'arif@email.com',    phone:'01766-666666', gender:'Male',   status:'Graduated', enroll:'2022-09-01' },
+    { id:7,  first:'Sadia',   last:'Rahman',   email:'sadia@email.com',   phone:'01777-777777', gender:'Female', status:'Active',    enroll:'2023-06-01' },
+    { id:8,  first:'Tanvir',  last:'Ahmed',    email:'tanvir@email.com',  phone:'01788-888888', gender:'Male',   status:'Active',    enroll:'2023-06-01' },
+    { id:9,  first:'Mim',     last:'Begum',    email:'mim@email.com',     phone:'01799-999999', gender:'Female', status:'Active',    enroll:'2023-09-01' },
+    { id:10, first:'Rafi',    last:'Abdullah', email:'rafi@email.com',    phone:'01700-000000', gender:'Male',   status:'Inactive',  enroll:'2022-09-01' },
+  ];
+
+  const courses = [
+    { id:1, code:'CS101', name:'Introduction to Programming',   credits:3, dept:'Computer Science', instructor:'Dr. Hassan', enrolled:5 },
+    { id:2, code:'CS201', name:'Data Structures',               credits:3, dept:'Computer Science', instructor:'Dr. Akter',  enrolled:3 },
+    { id:3, code:'CS301', name:'Database Management',           credits:3, dept:'Computer Science', instructor:'Dr. Rahman', enrolled:2 },
+    { id:4, code:'MA101', name:'Mathematics for CS',            credits:3, dept:'Mathematics',      instructor:'Dr. Islam',  enrolled:3 },
+    { id:5, code:'DA101', name:'Introduction to Data Analysis', credits:3, dept:'Data Science',     instructor:'Dr. Begum',  enrolled:3 },
+    { id:6, code:'WD101', name:'Web Development Basics',        credits:3, dept:'Computer Science', instructor:'Dr. Khan',   enrolled:3 },
+    { id:7, code:'PY101', name:'Python Programming',            credits:3, dept:'Computer Science', instructor:'Dr. Ahmed',  enrolled:3 },
+    { id:8, code:'EN101', name:'English Communication',         credits:2, dept:'English',          instructor:'Dr. Hossain',enrolled:2 },
+  ];
+
+  const enrollments = [
+    { id:1,  student:'Farhana Akter',  course:'Intro to Programming', grade:92.5, letter:'A+', semester:'Spring 2023' },
+    { id:2,  student:'Farhana Akter',  course:'Mathematics for CS',   grade:88.0, letter:'A',  semester:'Spring 2023' },
+    { id:3,  student:'Farhana Akter',  course:'Web Development',      grade:95.0, letter:'A+', semester:'Spring 2023' },
+    { id:4,  student:'Rahim Uddin',    course:'Intro to Programming', grade:78.0, letter:'B+', semester:'Spring 2023' },
+    { id:5,  student:'Rahim Uddin',    course:'Data Structures',      grade:82.5, letter:'A-', semester:'Spring 2023' },
+    { id:6,  student:'Priya Sen',      course:'Intro to Programming', grade:91.0, letter:'A+', semester:'Spring 2023' },
+    { id:7,  student:'Priya Sen',      course:'Data Analysis',        grade:87.5, letter:'A',  semester:'Spring 2023' },
+    { id:8,  student:'Karim Hossain',  course:'Database Management',  grade:74.0, letter:'B',  semester:'Spring 2023' },
+    { id:9,  student:'Karim Hossain',  course:'Python Programming',   grade:85.0, letter:'A',  semester:'Spring 2023' },
+    { id:10, student:'Nadia Islam',    course:'Intro to Programming', grade:96.0, letter:'A+', semester:'Spring 2023' },
+    { id:11, student:'Nadia Islam',    course:'Mathematics for CS',   grade:90.0, letter:'A+', semester:'Spring 2023' },
+    { id:12, student:'Sadia Rahman',   course:'Web Development',      grade:88.0, letter:'A',  semester:'Summer 2023' },
+    { id:13, student:'Sadia Rahman',   course:'Python Programming',   grade:92.0, letter:'A+', semester:'Summer 2023' },
+    { id:14, student:'Tanvir Ahmed',   course:'Data Structures',      grade:70.0, letter:'B-', semester:'Summer 2023' },
+    { id:15, student:'Mim Begum',      course:'Intro to Programming', grade:89.0, letter:'A',  semester:'Fall 2023' },
+    { id:16, student:'Mim Begum',      course:'English Communication',grade:94.0, letter:'A+', semester:'Fall 2023' },
+  ];
+
+  let currentTab = 'students';
+  let nextId = 11;
+
+  const sqlQueries = {
+    students: `<span class="sql-kw">SELECT</span> student_id, first_name, last_name, email, status\n<span class="sql-kw">FROM</span> students\n<span class="sql-kw">WHERE</span> status = <span class="sql-str">'Active'</span>\n<span class="sql-kw">ORDER BY</span> first_name <span class="sql-kw">ASC</span>;`,
+    courses: `<span class="sql-kw">SELECT</span> course_code, course_name, credits, department, instructor\n<span class="sql-kw">FROM</span> courses\n<span class="sql-kw">ORDER BY</span> department, course_name;`,
+    enrollments: `<span class="sql-kw">SELECT</span> s.first_name, c.course_name, e.grade, e.grade_letter\n<span class="sql-kw">FROM</span> enrollments e\n<span class="sql-kw">JOIN</span> students s <span class="sql-kw">ON</span> e.student_id = s.student_id\n<span class="sql-kw">JOIN</span> courses c <span class="sql-kw">ON</span> e.course_id = c.course_id\n<span class="sql-kw">ORDER BY</span> e.grade <span class="sql-kw">DESC</span>;`,
+    grades: `<span class="sql-kw">SELECT</span> s.first_name, <span class="sql-kw">ROUND</span>(<span class="sql-kw">AVG</span>(e.grade), 2) <span class="sql-kw">AS</span> avg_grade\n<span class="sql-kw">FROM</span> enrollments e\n<span class="sql-kw">JOIN</span> students s <span class="sql-kw">ON</span> e.student_id = s.student_id\n<span class="sql-kw">GROUP BY</span> s.student_id\n<span class="sql-kw">ORDER BY</span> avg_grade <span class="sql-kw">DESC</span>\n<span class="sql-kw">LIMIT</span> 5;`,
+  };
+
+  function showTab(tab, btn) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('addForm').classList.remove('show');
+    document.getElementById('searchInput').value = '';
+    renderTable();
+    document.getElementById('sqlDisplay').innerHTML = sqlQueries[tab];
+  }
+
+  function toggleForm() {
+    document.getElementById('addForm').classList.toggle('show');
+  }
+
+  function addStudent() {
+    const first = document.getElementById('fFirst').value.trim();
+    const last  = document.getElementById('fLast').value.trim();
+    const email = document.getElementById('fEmail').value.trim();
+    if (!first || !last || !email) { alert('Please fill in First Name, Last Name and Email!'); return; }
+    students.push({
+      id: nextId++,
+      first, last, email,
+      phone: document.getElementById('fPhone').value.trim() || '—',
+      gender: document.getElementById('fGender').value,
+      status: document.getElementById('fStatus').value,
+      enroll: new Date().toISOString().split('T')[0]
+    });
+    ['fFirst','fLast','fEmail','fPhone'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('addForm').classList.remove('show');
+    updateStats();
+    renderTable();
+  }
+
+  function deleteStudent(id) {
+    if (!confirm('Delete this student?')) return;
+    students = students.filter(s => s.id !== id);
+    updateStats();
+    renderTable();
+  }
+
+  function statusBadge(s) {
+    const cls = s === 'Active' ? 'badge-active' : s === 'Graduated' ? 'badge-graduated' : 'badge-inactive';
+    return `<span class="badge ${cls}">${s}</span>`;
+  }
+
+  function gradeBadge(l) {
+    const cls = l.startsWith('A') ? 'badge-grade-a' : l.startsWith('B') ? 'badge-grade-b' : 'badge-grade-c';
+    return `<span class="badge ${cls}">${l}</span>`;
+  }
+
+  function renderTable() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const head = document.getElementById('tableHead');
+    const body = document.getElementById('tableBody');
+
+    if (currentTab === 'students') {
+      head.innerHTML = `<tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Gender</th><th>Status</th><th>Enrolled</th><th>Action</th></tr>`;
+      const filtered = students.filter(s =>
+        (s.first+' '+s.last+s.email+s.status).toLowerCase().includes(q)
+      );
+      body.innerHTML = filtered.length ? filtered.map(s => `
+        <tr>
+          <td><span style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted)">${s.id}</span></td>
+          <td><strong>${s.first} ${s.last}</strong></td>
+          <td style="font-size:0.82rem;color:var(--muted)">${s.email}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem">${s.phone}</td>
+          <td>${s.gender}</td>
+          <td>${statusBadge(s.status)}</td>
+          <td style="font-size:0.82rem;color:var(--muted)">${s.enroll}</td>
+          <td><button class="btn btn-danger" style="padding:0.3rem 0.7rem;font-size:0.75rem" onclick="deleteStudent(${s.id})">Delete</button></td>
+        </tr>`).join('') : `<tr><td colspan="8"><div class="empty"><span class="empty-icon">🔍</span>No students found</div></td></tr>`;
+
+    } else if (currentTab === 'courses') {
+      head.innerHTML = `<tr><th>Code</th><th>Course Name</th><th>Credits</th><th>Department</th><th>Instructor</th><th>Enrolled</th></tr>`;
+      const filtered = courses.filter(c =>
+        (c.code+c.name+c.dept+c.instructor).toLowerCase().includes(q)
+      );
+      body.innerHTML = filtered.map(c => `
+        <tr>
+          <td><span style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--accent);font-weight:600">${c.code}</span></td>
+          <td><strong>${c.name}</strong></td>
+          <td style="text-align:center"><span class="badge badge-active">${c.credits}</span></td>
+          <td>${c.dept}</td>
+          <td>${c.instructor}</td>
+          <td style="text-align:center;font-weight:700;color:var(--accent)">${c.enrolled}</td>
+        </tr>`).join('');
+
+    } else if (currentTab === 'enrollments') {
+      head.innerHTML = `<tr><th>#</th><th>Student</th><th>Course</th><th>Grade</th><th>Letter</th><th>Semester</th></tr>`;
+      const filtered = enrollments.filter(e =>
+        (e.student+e.course+e.semester+e.letter).toLowerCase().includes(q)
+      );
+      body.innerHTML = filtered.map(e => `
+        <tr>
+          <td style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted)">${e.id}</td>
+          <td><strong>${e.student}</strong></td>
+          <td style="font-size:0.85rem">${e.course}</td>
+          <td><strong style="color:var(--accent)">${e.grade}</strong></td>
+          <td>${gradeBadge(e.letter)}</td>
+          <td style="font-size:0.82rem;color:var(--muted)">${e.semester}</td>
+        </tr>`).join('');
+
+    } else if (currentTab === 'grades') {
+      head.innerHTML = `<tr><th>Rank</th><th>Student</th><th>Avg Grade</th><th>Courses</th><th>Performance</th></tr>`;
+      // Calculate averages
+      const avgs = {};
+      enrollments.forEach(e => {
+        if (!avgs[e.student]) avgs[e.student] = { total: 0, count: 0 };
+        avgs[e.student].total += e.grade;
+        avgs[e.student].count++;
+      });
+      const ranked = Object.entries(avgs)
+        .map(([name, d]) => ({ name, avg: (d.total/d.count).toFixed(1), count: d.count }))
+        .filter(r => r.name.toLowerCase().includes(q))
+        .sort((a,b) => b.avg - a.avg);
+      const medals = ['🥇','🥈','🥉'];
+      body.innerHTML = ranked.map((r,i) => {
+        const pct = Math.round((r.avg/100)*100);
+        return `<tr>
+          <td style="font-size:1.2rem">${medals[i] || (i+1)}</td>
+          <td><strong>${r.name}</strong></td>
+          <td><strong style="color:var(--accent);font-size:1.1rem">${r.avg}</strong></td>
+          <td style="text-align:center">${r.count}</td>
+          <td style="min-width:120px">
+            <div style="background:var(--border);border-radius:4px;height:6px">
+              <div style="width:${pct}%;height:6px;background:linear-gradient(90deg,#4f46e5,#7c3aed);border-radius:4px"></div>
+            </div>
+          </td>
+        </tr>`;}).join('');
+    }
+  }
+
+  function updateStats() {
+    const active = students.filter(s => s.status === 'Active').length;
+    const graduated = students.filter(s => s.status === 'Graduated').length;
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-card"><div class="stat-icon">👥</div><span class="stat-num">${students.length}</span><div class="stat-label">Total Students</div></div>
+      <div class="stat-card"><div class="stat-icon">✅</div><span class="stat-num">${active}</span><div class="stat-label">Active</div></div>
+      <div class="stat-card"><div class="stat-icon">🎓</div><span class="stat-num">${graduated}</span><div class="stat-label">Graduated</div></div>
+      <div class="stat-card"><div class="stat-icon">📚</div><span class="stat-num">${courses.length}</span><div class="stat-label">Courses</div></div>
+      <div class="stat-card"><div class="stat-icon">📋</div><span class="stat-num">${enrollments.length}</span><div class="stat-label">Enrollments</div></div>
+    `;
+  }
+
+  // Init
+  updateStats();
+  renderTable();
+  document.getElementById('sqlDisplay').innerHTML = sqlQueries.students;
+</script>
+</body>
+</html>
