@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GuessIt – Number Guessing Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111;
+      --card: #1a1a1a;
+      --accent: #00ff88;
+      --accent2: #00cc6a;
+      --red: #ff4757;
+      --blue: #4f8ef7;
+      --yellow: #ffd700;
+      --text: #f0f0f0;
+      --muted: #666;
+      --border: #222;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: -100px; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 300px;
+      background: radial-gradient(ellipse, rgba(0,255,136,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* HEADER */
+    .header { text-align: center; margin-bottom: 2rem; animation: fadeDown 0.5s ease; }
+    .java-badge {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.2);
+      padding: 0.3rem 0.9rem; border-radius: 20px;
+      font-family: 'DM Mono', monospace; font-size: 0.72rem;
+      color: var(--accent); letter-spacing: 0.1em; margin-bottom: 0.8rem;
+    }
+    h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 900; letter-spacing: -0.02em; }
+    h1 span { color: var(--accent); }
+    .subtitle { color: var(--muted); font-size: 0.88rem; margin-top: 0.3rem; font-family: 'DM Mono', monospace; }
+
+    /* CARD */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      width: 100%; max-width: 480px;
+      box-shadow: 0 0 60px rgba(0,255,136,0.05), 0 20px 60px rgba(0,0,0,0.5);
+      animation: fadeUp 0.5s 0.1s ease both;
+    }
+
+    /* SCREENS */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* START */
+    .start-icon { font-size: 4rem; text-align: center; margin-bottom: 1rem; }
+    .start-title { font-size: 1.5rem; font-weight: 800; text-align: center; margin-bottom: 0.5rem; }
+    .start-desc { color: var(--muted); text-align: center; font-size: 0.88rem; margin-bottom: 1.5rem; line-height: 1.6; }
+    .rules {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .rule { display: flex; align-items: center; gap: 0.7rem; font-size: 0.88rem; margin-bottom: 0.6rem; }
+    .rule:last-child { margin-bottom: 0; }
+    .rule-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .name-input {
+      width: 100%; padding: 0.85rem 1.1rem;
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: 12px; color: var(--text);
+      font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 600;
+      outline: none; margin-bottom: 1rem; transition: border-color 0.2s;
+    }
+    .name-input:focus { border-color: var(--accent); }
+    .name-input::placeholder { color: var(--muted); }
+
+    /* BUTTONS */
+    .btn {
+      width: 100%; padding: 1rem; border: none; border-radius: 12px;
+      font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { background: var(--accent2); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,255,136,0.25); }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text); margin-top: 0.6rem; }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* GAME SCREEN */
+    .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .player-name { font-weight: 700; font-size: 0.95rem; }
+    .attempt-badge {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.3rem 0.8rem;
+      font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--accent);
+    }
+
+    /* NUMBER DISPLAY */
+    .number-display {
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: 16px; padding: 1.5rem; text-align: center; margin-bottom: 1.5rem;
+      position: relative; overflow: hidden;
+    }
+    .number-display::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+    .range-label { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .range-display { font-size: 1.8rem; font-weight: 900; color: var(--text); letter-spacing: 0.05em; }
+    .range-min { color: var(--blue); }
+    .range-max { color: var(--red); }
+    .range-sep { color: var(--muted); margin: 0 0.3rem; }
+
+    /* RANGE BAR */
+    .range-bar-wrap { margin: 1rem 0; position: relative; }
+    .range-bar { height: 8px; background: var(--border); border-radius: 10px; position: relative; }
+    .range-fill { height: 8px; border-radius: 10px; background: linear-gradient(90deg, var(--blue), var(--accent), var(--red)); position: absolute; top: 0; transition: left 0.3s, width 0.3s; }
+    .range-indicator { position: absolute; top: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); border: 3px solid var(--bg); transform: translateX(-50%); transition: left 0.3s; box-shadow: 0 0 10px rgba(0,255,136,0.5); }
+
+    /* FEEDBACK */
+    .feedback {
+      text-align: center; padding: 1rem; border-radius: 12px;
+      margin-bottom: 1rem; font-weight: 700; font-size: 1rem;
+      border: 1px solid var(--border); background: var(--card);
+      min-height: 56px; display: flex; align-items: center; justify-content: center;
+      transition: all 0.3s;
+    }
+    .feedback.correct { border-color: var(--accent); background: rgba(0,255,136,0.08); color: var(--accent); }
+    .feedback.too-low { border-color: var(--blue); background: rgba(79,142,247,0.08); color: var(--blue); }
+    .feedback.too-high { border-color: var(--red); background: rgba(255,71,87,0.08); color: var(--red); }
+
+    /* HINT */
+    .hint-box {
+      background: rgba(255,215,0,0.06); border: 1px solid rgba(255,215,0,0.2);
+      border-radius: 10px; padding: 0.7rem 1rem;
+      font-size: 0.83rem; color: var(--yellow);
+      margin-bottom: 1rem; display: none;
+    }
+    .hint-box.show { display: block; }
+
+    /* INPUT ROW */
+    .input-row { display: flex; gap: 0.7rem; margin-bottom: 1rem; }
+    .guess-input {
+      flex: 1; padding: 0.85rem 1rem;
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: 12px; color: var(--text);
+      font-family: 'DM Mono', monospace; font-size: 1.3rem; font-weight: 700;
+      outline: none; text-align: center; transition: border-color 0.2s;
+    }
+    .guess-input:focus { border-color: var(--accent); }
+    .guess-input::placeholder { color: var(--muted); font-size: 1rem; font-weight: 400; }
+    .guess-btn {
+      padding: 0.85rem 1.4rem; background: var(--accent); color: #000;
+      border: none; border-radius: 12px;
+      font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 900;
+      cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+    }
+    .guess-btn:hover { background: var(--accent2); transform: scale(1.05); }
+    .guess-btn:active { transform: scale(0.95); }
+
+    /* HISTORY */
+    .history-label { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+    .history-list { display: flex; flex-wrap: wrap; gap: 0.4rem; min-height: 32px; }
+    .history-chip {
+      font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 700;
+      padding: 0.2rem 0.6rem; border-radius: 6px;
+    }
+    .chip-low { background: rgba(79,142,247,0.15); color: var(--blue); }
+    .chip-high { background: rgba(255,71,87,0.15); color: var(--red); }
+
+    /* STATS BAR */
+    .stats-bar {
+      display: flex; gap: 0.6rem; margin-top: 1.2rem;
+      padding-top: 1.2rem; border-top: 1px solid var(--border);
+    }
+    .stat-item { flex: 1; text-align: center; }
+    .stat-n { font-size: 1.3rem; font-weight: 900; color: var(--accent); display: block; }
+    .stat-l { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--muted); text-transform: uppercase; }
+
+    /* RESULT */
+    .result-icon { font-size: 4rem; text-align: center; margin-bottom: 0.8rem; }
+    .result-title { font-size: 1.5rem; font-weight: 900; text-align: center; margin-bottom: 0.5rem; }
+    .result-sub { color: var(--muted); text-align: center; font-size: 0.88rem; margin-bottom: 1.5rem; }
+    .result-num {
+      font-size: 4rem; font-weight: 900; color: var(--accent);
+      text-align: center; display: block; line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+    .result-attempts { color: var(--muted); text-align: center; font-family: 'DM Mono', monospace; font-size: 0.8rem; margin-bottom: 1.5rem; }
+    .result-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
+    .result-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; text-align: center; }
+    .result-box-n { font-size: 1.5rem; font-weight: 900; color: var(--accent); display: block; }
+    .result-box-l { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); text-transform: uppercase; }
+    .result-msg { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; text-align: center; font-weight: 700; margin-bottom: 1.2rem; font-size: 0.9rem; }
+
+    .credit { margin-top: 1.5rem; font-size: 0.68rem; color: var(--muted); text-align: center; font-family: 'DM Mono', monospace; animation: fadeUp 0.5s 0.4s ease both; }
+    .credit span { color: var(--accent); }
+
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-15px)}to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)} }
+    @keyframes shake { 0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)} }
+    .shake { animation: shake 0.3s ease; }
+    @keyframes pop { 0%,100%{transform:scale(1)}50%{transform:scale(1.04)} }
+    .pop { animation: pop 0.3s ease; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="java-badge">☕ java project</div>
+  <h1>Guess<span>It</span></h1>
+  <p class="subtitle">// number guessing game</p>
+</div>
+
+<div class="card">
+
+  <!-- START -->
+  <div class="screen active" id="startScreen">
+    <div class="start-icon">🎯</div>
+    <div class="start-title">Number Guessing Game</div>
+    <div class="start-desc">I'm thinking of a number between 1 and 100. Can you guess it?</div>
+    <div class="rules">
+      <div class="rule"><span class="rule-icon">🎲</span> Random number between 1 and 100</div>
+      <div class="rule"><span class="rule-icon">🔟</span> You have 10 attempts to guess</div>
+      <div class="rule"><span class="rule-icon">💡</span> Hints after 3 wrong guesses</div>
+      <div class="rule"><span class="rule-icon">🔥</span> Closeness indicator after each guess</div>
+    </div>
+    <input class="name-input" id="nameInput" placeholder="Enter your name..." maxlength="20"/>
+    <button class="btn btn-primary" onclick="startGame()">Start Game 🎯</button>
+  </div>
+
+  <!-- GAME -->
+  <div class="screen" id="gameScreen">
+    <div class="game-header">
+      <span class="player-name" id="playerLabel">👤 Player</span>
+      <span class="attempt-badge" id="attemptBadge">10 left</span>
+    </div>
+
+    <div class="number-display">
+      <div class="range-label">// guess a number between</div>
+      <div class="range-display">
+        <span class="range-min" id="rangeMin">1</span>
+        <span class="range-sep">—</span>
+        <span class="range-max" id="rangeMax">100</span>
+      </div>
+      <div class="range-bar-wrap">
+        <div class="range-bar">
+          <div class="range-fill" id="rangeFill" style="left:0%;width:100%"></div>
+        </div>
+        <div class="range-indicator" id="rangeIndicator" style="left:50%"></div>
+      </div>
+    </div>
+
+    <div class="feedback" id="feedback">Make your first guess! 🎯</div>
+    <div class="hint-box" id="hintBox"></div>
+
+    <div class="input-row">
+      <input class="guess-input" id="guessInput" type="number" min="1" max="100" placeholder="?"/>
+      <button class="guess-btn" onclick="makeGuess()">→</button>
+    </div>
+
+    <div class="history-label">Previous guesses</div>
+    <div class="history-list" id="historyList"></div>
+
+    <div class="stats-bar">
+      <div class="stat-item"><span class="stat-n" id="sGames">0</span><span class="stat-l">Games</span></div>
+      <div class="stat-item"><span class="stat-n" id="sWins">0</span><span class="stat-l">Wins</span></div>
+      <div class="stat-item"><span class="stat-n" id="sBest">—</span><span class="stat-l">Best</span></div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="resultScreen">
+    <div class="result-icon" id="resultIcon">🏆</div>
+    <div class="result-title" id="resultTitle">You got it!</div>
+    <div class="result-sub" id="resultSub">The number was...</div>
+    <span class="result-num" id="resultNum"></span>
+    <div class="result-attempts" id="resultAttempts"></div>
+    <div class="result-grid">
+      <div class="result-box"><span class="result-box-n" id="rGames">0</span><span class="result-box-l">Games</span></div>
+      <div class="result-box"><span class="result-box-n" id="rWins">0</span><span class="result-box-l">Wins</span></div>
+      <div class="result-box"><span class="result-box-n" id="rBest">—</span><span class="result-box-l">Best</span></div>
+    </div>
+    <div class="result-msg" id="resultMsg"></div>
+    <button class="btn btn-primary" onclick="playAgain()">Play Again 🔄</button>
+    <button class="btn btn-outline" onclick="goHome()">Change Player</button>
+  </div>
+
+</div>
+
+<div class="credit">Built by <span>Farhana Akter Mim</span> · Java Project</div>
+
+<script>
+  let secret, attempts, maxAttempts = 10, won;
+  let playerName = 'Player';
+  let totalGames = 0, totalWins = 0, bestScore = null;
+  let low = 1, high = 100;
+  let history = [];
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function startGame() {
+    playerName = document.getElementById('nameInput').value.trim() || 'Player';
+    newRound();
+    showScreen('gameScreen');
+  }
+
+  function newRound() {
+    secret = Math.floor(Math.random() * 100) + 1;
+    attempts = 0; won = false; history = [];
+    low = 1; high = 100;
+    document.getElementById('playerLabel').textContent = '👤 ' + playerName;
+    document.getElementById('feedback').textContent = 'Make your first guess! 🎯';
+    document.getElementById('feedback').className = 'feedback';
+    document.getElementById('hintBox').classList.remove('show');
+    document.getElementById('historyList').innerHTML = '';
+    document.getElementById('guessInput').value = '';
+    updateAttemptBadge();
+    updateRangeBar(1, 100, 50);
+    updateStatsBar();
+  }
+
+  function makeGuess() {
+    const input = document.getElementById('guessInput');
+    const val = parseInt(input.value);
+    if (isNaN(val) || val < 1 || val > 100) {
+      input.classList.add('shake');
+      setTimeout(() => input.classList.remove('shake'), 300);
+      return;
+    }
+    input.value = '';
+    attempts++;
+    updateAttemptBadge();
+
+    if (val === secret) {
+      won = true;
+      totalGames++; totalWins++;
+      if (bestScore === null || attempts < bestScore) bestScore = attempts;
+      showResult(true);
+    } else {
+      const fb = document.getElementById('feedback');
+      const diff = Math.abs(val - secret);
+      let closeness = diff <= 5 ? '🔥 Very hot!' : diff <= 15 ? '😊 Warm' : diff <= 30 ? '😐 Cool' : '🥶 Cold!';
+
+      if (val < secret) {
+        low = Math.max(low, val + 1);
+        fb.className = 'feedback too-low';
+        fb.textContent = `📈 Too LOW! ${closeness} (${diff} away)`;
+        addHistory(val, 'low');
+      } else {
+        high = Math.min(high, val - 1);
+        fb.className = 'feedback too-high';
+        fb.textContent = `📉 Too HIGH! ${closeness} (${diff} away)`;
+        addHistory(val, 'high');
+      }
+
+      updateRangeBar(low, high, val);
+
+      // Show hint after 3 attempts
+      if (attempts >= 3) showHint();
+
+      if (attempts >= maxAttempts) {
+        totalGames++;
+        showResult(false);
+      }
+    }
+    updateStatsBar();
+  }
+
+  function addHistory(val, dir) {
+    history.push({ val, dir });
+    const list = document.getElementById('historyList');
+    list.innerHTML = history.map(h =>
+      `<span class="history-chip chip-${h.dir}">${h.val} ${h.dir === 'low' ? '↑' : '↓'}</span>`
+    ).join('');
+  }
+
+  function showHint() {
+    const box = document.getElementById('hintBox');
+    const even = secret % 2 === 0 ? 'EVEN' : 'ODD';
+    let hint = `💡 Hint: The number is ${even}`;
+    if (attempts >= 6) hint += ` and between ${low} and ${high}`;
+    box.textContent = hint;
+    box.classList.add('show');
+  }
+
+  function updateAttemptBadge() {
+    const left = maxAttempts - attempts;
+    const el = document.getElementById('attemptBadge');
+    el.textContent = left + ' left';
+    el.style.color = left <= 3 ? '#ff4757' : left <= 5 ? '#ffd700' : '#00ff88';
+  }
+
+  function updateRangeBar(lo, hi, guess) {
+    const pctLo = ((lo - 1) / 99) * 100;
+    const pctHi = ((hi - 1) / 99) * 100;
+    const pctG  = ((guess - 1) / 99) * 100;
+    document.getElementById('rangeFill').style.left  = pctLo + '%';
+    document.getElementById('rangeFill').style.width = (pctHi - pctLo) + '%';
+    document.getElementById('rangeIndicator').style.left = pctG + '%';
+    document.getElementById('rangeMin').textContent = lo;
+    document.getElementById('rangeMax').textContent = hi;
+  }
+
+  function updateStatsBar() {
+    document.getElementById('sGames').textContent = totalGames;
+    document.getElementById('sWins').textContent  = totalWins;
+    document.getElementById('sBest').textContent  = bestScore ?? '—';
+  }
+
+  function showResult(didWin) {
+    const icons   = ['🥇','🌟','👍','😊','😅','💔'];
+    const msgs    = [
+      '🏆 FIRST TRY! Absolutely incredible!',
+      '🌟 Amazing! You guessed it super fast!',
+      '👍 Great job! Very well played!',
+      '😊 Good work! You got there!',
+      '😅 Phew! Just made it!',
+      '💔 So close! The number was ' + secret + '. Try again!',
+    ];
+
+    document.getElementById('resultIcon').textContent   = didWin ? (icons[Math.min(attempts-1, 4)]) : '💔';
+    document.getElementById('resultTitle').textContent  = didWin ? `You got it, ${playerName}!` : `Game Over, ${playerName}!`;
+    document.getElementById('resultSub').textContent    = didWin ? 'The number was...' : 'The secret number was...';
+    document.getElementById('resultNum').textContent    = secret;
+    document.getElementById('resultAttempts').textContent = didWin ? `Guessed in ${attempts} attempt${attempts>1?'s':''}` : `Used all ${maxAttempts} attempts`;
+    document.getElementById('resultMsg').textContent    = didWin ? msgs[Math.min(attempts-1, 4)] : msgs[5];
+    document.getElementById('rGames').textContent = totalGames;
+    document.getElementById('rWins').textContent  = totalWins;
+    document.getElementById('rBest').textContent  = bestScore ?? '—';
+    showScreen('resultScreen');
+  }
+
+  function playAgain() { newRound(); showScreen('gameScreen'); }
+  function goHome()    { showScreen('startScreen'); }
+
+  // Enter key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (document.getElementById('gameScreen').classList.contains('active')) makeGuess();
+      if (document.getElementById('startScreen').classList.contains('active')) startGame();
+    }
+  });
+</script>
+</body>
+</html>
