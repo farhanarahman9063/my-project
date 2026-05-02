@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QuizMaster – Python Quiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --card: #0f3460;
+      --accent: #f5a623;
+      --accent2: #f7c267;
+      --green: #2ecc71;
+      --red: #e74c3c;
+      --text: #f0f0f0;
+      --muted: #8892b0;
+      --border: #1e3a5f;
+      --python: #3776ab;
+      --python2: #ffd43b;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: -150px; right: -150px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(55,118,171,0.15) 0%, transparent 65%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    /* HEADER */
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+      animation: fadeDown 0.5s ease forwards;
+    }
+    .python-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(55,118,171,0.2);
+      border: 1px solid rgba(55,118,171,0.4);
+      padding: 0.3rem 0.9rem;
+      border-radius: 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--python2);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.8rem;
+    }
+    h1 {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+    h1 span { color: var(--accent); }
+    .subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 0.4rem; }
+
+    /* CARD */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 580px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      animation: fadeUp 0.5s 0.1s ease both;
+    }
+
+    /* SCREENS */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* START SCREEN */
+    .start-icon { font-size: 4rem; text-align: center; margin-bottom: 1rem; }
+    .start-title { font-size: 1.6rem; font-weight: 900; text-align: center; margin-bottom: 0.5rem; }
+    .start-desc { color: var(--muted); text-align: center; font-size: 0.9rem; margin-bottom: 2rem; line-height: 1.6; }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.8rem;
+      margin-bottom: 2rem;
+    }
+    .info-box {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .info-num { font-size: 1.8rem; font-weight: 900; color: var(--accent); display: block; }
+    .info-label { font-size: 0.72rem; color: var(--muted); font-family: 'DM Mono', monospace; text-transform: uppercase; }
+
+    /* NAME INPUT */
+    .name-input {
+      width: 100%;
+      padding: 0.85rem 1.2rem;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      outline: none;
+      margin-bottom: 1rem;
+      transition: border-color 0.2s;
+    }
+    .name-input:focus { border-color: var(--accent); }
+    .name-input::placeholder { color: var(--muted); }
+
+    /* BUTTONS */
+    .btn {
+      width: 100%;
+      padding: 1rem;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #1a1a2e;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(245,166,35,0.3); }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--border);
+      color: var(--text);
+      margin-top: 0.6rem;
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* QUIZ SCREEN */
+    .progress-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.6rem;
+    }
+    .q-counter { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--muted); }
+    .score-badge {
+      background: rgba(245,166,35,0.15);
+      color: var(--accent);
+      padding: 0.2rem 0.7rem;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      font-family: 'DM Mono', monospace;
+    }
+    .progress-bar { height: 6px; background: var(--border); border-radius: 10px; margin-bottom: 1.5rem; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 10px; transition: width 0.4s ease; }
+    .question-text {
+      font-size: 1.1rem;
+      font-weight: 700;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+      min-height: 60px;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.2rem; }
+    .option-btn {
+      padding: 0.9rem 1.2rem;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .option-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(245,166,35,0.08); }
+    .option-btn.correct { border-color: var(--green); background: rgba(46,204,113,0.12); color: var(--green); }
+    .option-btn.wrong { border-color: var(--red); background: rgba(231,76,60,0.12); color: var(--red); }
+    .option-btn:disabled { cursor: default; }
+    .option-label {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      font-family: 'DM Mono', monospace;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .option-btn.correct .option-label { background: var(--green); color: white; }
+    .option-btn.wrong .option-label { background: var(--red); color: white; }
+
+    /* EXPLANATION */
+    .explanation {
+      background: rgba(245,166,35,0.08);
+      border: 1px solid rgba(245,166,35,0.2);
+      border-radius: 10px;
+      padding: 0.9rem 1.1rem;
+      font-size: 0.85rem;
+      color: var(--accent2);
+      margin-bottom: 1rem;
+      display: none;
+      line-height: 1.5;
+    }
+    .explanation.show { display: block; }
+
+    /* RESULT SCREEN */
+    .result-icon { font-size: 4rem; text-align: center; margin-bottom: 1rem; }
+    .result-title { font-size: 1.5rem; font-weight: 900; text-align: center; margin-bottom: 0.5rem; }
+    .result-name { color: var(--accent); }
+    .result-score {
+      text-align: center;
+      margin: 1.5rem 0;
+    }
+    .score-big {
+      font-size: 4rem;
+      font-weight: 900;
+      color: var(--accent);
+      line-height: 1;
+      display: block;
+    }
+    .score-sub { color: var(--muted); font-size: 0.85rem; font-family: 'DM Mono', monospace; }
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.8rem;
+      margin: 1.5rem 0;
+    }
+    .result-box {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .result-num { font-size: 1.6rem; font-weight: 900; display: block; }
+    .result-num.green { color: var(--green); }
+    .result-num.red { color: var(--red); }
+    .result-num.orange { color: var(--accent); }
+    .result-label { font-size: 0.7rem; color: var(--muted); font-family: 'DM Mono', monospace; text-transform: uppercase; }
+    .result-msg {
+      text-align: center;
+      padding: 1rem;
+      background: var(--card);
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+    }
+
+    /* TIMER */
+    .timer {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-align: right;
+      margin-bottom: 0.5rem;
+    }
+    .timer.warning { color: var(--red); }
+
+    .credit {
+      margin-top: 1.5rem;
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-align: center;
+      font-family: 'DM Mono', monospace;
+      animation: fadeUp 0.5s 0.4s ease both;
+    }
+    .credit span { color: var(--accent); }
+
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-15px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(15px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes pop { 0%,100% { transform:scale(1); } 50% { transform:scale(1.05); } }
+    .pop { animation: pop 0.3s ease; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="python-badge">🐍 python project</div>
+  <h1>Quiz<span>Master</span></h1>
+  <p class="subtitle">Test your Python knowledge!</p>
+</div>
+
+<div class="card">
+
+  <!-- START SCREEN -->
+  <div class="screen active" id="startScreen">
+    <div class="start-icon">🧠</div>
+    <div class="start-title">Python Quiz Challenge</div>
+    <div class="start-desc">Test your Python programming knowledge with 10 questions. Each question has 4 options. Good luck! 🍀</div>
+    <div class="info-grid">
+      <div class="info-box"><span class="info-num">10</span><span class="info-label">Questions</span></div>
+      <div class="info-box"><span class="info-num">30s</span><span class="info-label">Per Q</span></div>
+      <div class="info-box"><span class="info-num">4</span><span class="info-label">Options</span></div>
+    </div>
+    <input class="name-input" id="nameInput" type="text" placeholder="Enter your name..." maxlength="30"/>
+    <button class="btn btn-primary" onclick="startQuiz()">Start Quiz 🚀</button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="screen" id="quizScreen">
+    <div class="progress-top">
+      <span class="q-counter" id="qCounter">Question 1 of 10</span>
+      <span class="score-badge" id="scoreBadge">Score: 0</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="timer" id="timer">⏱ 30s</div>
+    <div class="question-text" id="questionText"></div>
+    <div class="options" id="options"></div>
+    <div class="explanation" id="explanation"></div>
+    <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" style="display:none">Next Question →</button>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="screen" id="resultScreen">
+    <div class="result-icon" id="resultIcon">🏆</div>
+    <div class="result-title">Well done, <span class="result-name" id="resultName"></span>!</div>
+    <div class="result-score">
+      <span class="score-big" id="scoreBig"></span>
+      <span class="score-sub">out of 10 correct</span>
+    </div>
+    <div class="result-grid">
+      <div class="result-box"><span class="result-num green" id="correctCount"></span><span class="result-label">Correct</span></div>
+      <div class="result-box"><span class="result-num red" id="wrongCount"></span><span class="result-label">Wrong</span></div>
+      <div class="result-box"><span class="result-num orange" id="pctCount"></span><span class="result-label">Score</span></div>
+    </div>
+    <div class="result-msg" id="resultMsg"></div>
+    <button class="btn btn-primary" onclick="restartQuiz()">Play Again 🔄</button>
+    <button class="btn btn-outline" onclick="showStart()">Change Player</button>
+  </div>
+
+</div>
+
+<div class="credit">Built by <span>Farhana Akter Mim</span> · Python Project</div>
+
+<script>
+  const questions = [
+    { q: "What is the output of print(2 ** 3)?", opts: ["6","8","9","16"], ans: 1, exp: "2 ** 3 means 2 to the power of 3 = 8" },
+    { q: "Which data type stores True or False in Python?", opts: ["int","str","bool","float"], ans: 2, exp: "bool (Boolean) stores True or False values" },
+    { q: "What does len('Hello') return?", opts: ["4","5","6","Error"], ans: 1, exp: "len() counts characters. 'Hello' has 5 characters" },
+    { q: "Which keyword defines a function in Python?", opts: ["function","define","func","def"], ans: 3, exp: "def is used to define a function in Python" },
+    { q: "What is the correct way to create a list in Python?", opts: ["(1,2,3)","{1,2,3}","[1,2,3]","<1,2,3>"], ans: 2, exp: "Lists use square brackets [ ]" },
+    { q: "Which of these is a Python comment?", opts: ["// comment","/* comment */","# comment","-- comment"], ans: 2, exp: "Python uses # for single line comments" },
+    { q: "What does range(5) produce?", opts: ["1,2,3,4,5","0,1,2,3,4","0,1,2,3,4,5","1,2,3,4"], ans: 1, exp: "range(5) starts from 0 up to (not including) 5" },
+    { q: "Which method adds an item to the end of a list?", opts: ["add()","insert()","append()","push()"], ans: 2, exp: "append() adds an item to the end of a list" },
+    { q: "What is the output of type(3.14)?", opts: ["int","str","double","float"], ans: 3, exp: "3.14 is a decimal number, so its type is float" },
+    { q: "How do you start an if statement in Python?", opts: ["if (x > 0):","if x > 0:","IF x > 0:","if x > 0"], ans: 1, exp: "Python if statements use 'if condition:' with a colon" },
+  ];
+
+  let playerName = '';
+  let current = 0;
+  let score = 0;
+  let answered = false;
+  let timerInterval = null;
+  let timeLeft = 30;
+  let shuffled = [];
+
+  function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+  function startQuiz() {
+    playerName = document.getElementById('nameInput').value.trim() || 'Player';
+    current = 0; score = 0;
+    shuffled = shuffle(questions);
+    showScreen('quizScreen');
+    loadQuestion();
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function loadQuestion() {
+    answered = false;
+    timeLeft = 30;
+    const q = shuffled[current];
+    const labels = ['A','B','C','D'];
+
+    document.getElementById('qCounter').textContent = `Question ${current+1} of ${shuffled.length}`;
+    document.getElementById('scoreBadge').textContent = `Score: ${score}`;
+    document.getElementById('progressFill').style.width = `${(current/shuffled.length)*100}%`;
+    document.getElementById('questionText').textContent = q.q;
+    document.getElementById('explanation').classList.remove('show');
+    document.getElementById('nextBtn').style.display = 'none';
+
+    const opts = document.getElementById('options');
+    opts.innerHTML = q.opts.map((o, i) => `
+      <button class="option-btn" onclick="selectAnswer(${i})">
+        <span class="option-label">${labels[i]}</span>
+        ${o}
+      </button>
+    `).join('');
+
+    startTimer();
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    updateTimer();
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateTimer();
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        if (!answered) timeUp();
+      }
+    }, 1000);
+  }
+
+  function updateTimer() {
+    const el = document.getElementById('timer');
+    el.textContent = `⏱ ${timeLeft}s`;
+    el.className = 'timer' + (timeLeft <= 10 ? ' warning' : '');
+  }
+
+  function timeUp() {
+    answered = true;
+    const q = shuffled[current];
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach(b => b.disabled = true);
+    btns[q.ans].classList.add('correct');
+    showExplanation('⏰ Time\'s up! ' + q.exp);
+    document.getElementById('nextBtn').style.display = 'block';
+  }
+
+  function selectAnswer(idx) {
+    if (answered) return;
+    answered = true;
+    clearInterval(timerInterval);
+    const q = shuffled[current];
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach(b => b.disabled = true);
+
+    if (idx === q.ans) {
+      btns[idx].classList.add('correct');
+      score++;
+      showExplanation('✅ Correct! ' + q.exp);
+    } else {
+      btns[idx].classList.add('wrong');
+      btns[q.ans].classList.add('correct');
+      showExplanation('❌ Wrong! ' + q.exp);
+    }
+    document.getElementById('scoreBadge').textContent = `Score: ${score}`;
+    document.getElementById('nextBtn').style.display = 'block';
+  }
+
+  function showExplanation(text) {
+    const el = document.getElementById('explanation');
+    el.textContent = text;
+    el.classList.add('show');
+  }
+
+  function nextQuestion() {
+    current++;
+    if (current >= shuffled.length) showResult();
+    else loadQuestion();
+  }
+
+  function showResult() {
+    const pct = Math.round((score / shuffled.length) * 100);
+    const icons = ['😢','😅','🙂','👍','🌟','🏆'];
+    const msgs = [
+      'Keep studying Python! You\'ll get there! 📚',
+      'Not bad! Practice more and try again! 💪',
+      'Good effort! Review the topics and retry! 👀',
+      'Good job! You know your Python basics! 👏',
+      'Excellent! You\'re a Python pro! 🌟',
+      'PERFECT SCORE! You\'re amazing! 🏆🎉'
+    ];
+    const idx = Math.min(Math.floor(pct / 20), 5);
+
+    document.getElementById('resultIcon').textContent = icons[idx];
+    document.getElementById('resultName').textContent = playerName;
+    document.getElementById('scoreBig').textContent = score;
+    document.getElementById('correctCount').textContent = score;
+    document.getElementById('wrongCount').textContent = shuffled.length - score;
+    document.getElementById('pctCount').textContent = pct + '%';
+    document.getElementById('resultMsg').textContent = msgs[idx];
+    showScreen('resultScreen');
+  }
+
+  function restartQuiz() {
+    current = 0; score = 0;
+    shuffled = shuffle(questions);
+    showScreen('quizScreen');
+    loadQuestion();
+  }
+
+  function showStart() { showScreen('startScreen'); }
+</script>
+</body>
+</html>
