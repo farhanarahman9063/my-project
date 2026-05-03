@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ATM System – C++ Project</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#050a05;--surface:#0a120a;--card:#0d1a0d;--accent:#00ff41;--accent2:#00cc33;--red:#ff4444;--yellow:#ffd700;--blue:#4fc3f7;--text:#e0ffe0;--muted:#4a7a4a;--border:#0f2a0f}
+    body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem 4rem;position:relative;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,65,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,65,.02) 1px,transparent 1px);background-size:30px 30px;pointer-events:none}
+    .header{text-align:center;margin-bottom:2rem;animation:fadeDown .5s ease;position:relative;z-index:1}
+    .cpp-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(0,255,65,.07);border:1px solid rgba(0,255,65,.2);padding:.3rem .9rem;border-radius:20px;font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--accent);letter-spacing:.1em;margin-bottom:.8rem}
+    h1{font-size:clamp(2.5rem,6vw,4rem);font-weight:900;letter-spacing:-.02em}
+    h1 span{color:var(--accent);text-shadow:0 0 20px rgba(0,255,65,.4)}
+    .subtitle{color:var(--muted);font-size:.85rem;margin-top:.3rem;font-family:'Share Tech Mono',monospace}
+    .atm{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 0 60px rgba(0,255,65,.06),0 20px 60px rgba(0,0,0,.6);animation:fadeUp .5s .1s ease both;position:relative;z-index:1}
+    .atm-top{background:var(--card);border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
+    .atm-logo{font-family:'Share Tech Mono',monospace;font-size:.85rem;color:var(--accent);display:flex;align-items:center;gap:.5rem}
+    .atm-logo span{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:blink 1.5s infinite}
+    .atm-time{font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--muted)}
+    .atm-screen{background:#000;border:2px solid #0a2a0a;margin:1rem 1.5rem;border-radius:8px;padding:1.2rem;min-height:200px;font-family:'Share Tech Mono',monospace;font-size:.85rem;position:relative;overflow:hidden}
+    .screen-content{position:relative;z-index:1}
+    .screen-title{color:var(--accent);font-size:1rem;font-weight:700;margin-bottom:.8rem;border-bottom:1px solid #0a2a0a;padding-bottom:.5rem}
+    .screen-line{color:var(--text);margin:.3rem 0;font-size:.8rem}
+    .screen-line.muted{color:var(--muted)}.screen-line.success{color:var(--accent)}.screen-line.error{color:var(--red)}.screen-line.warn{color:var(--yellow)}.screen-line.info{color:var(--blue)}
+    .screen-balance{font-size:2rem;font-weight:900;color:var(--accent);text-align:center;margin:1rem 0;text-shadow:0 0 20px rgba(0,255,65,.4)}
+    .atm-keypad{padding:0 1.5rem 1.5rem}
+    .input-row{display:flex;gap:.6rem;margin-bottom:.8rem}
+    .atm-input{flex:1;padding:.7rem 1rem;background:#000;border:1px solid var(--border);border-radius:8px;color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.95rem;outline:none;transition:border-color .2s;width:100%}
+    .atm-input:focus{border-color:var(--accent);box-shadow:0 0 10px rgba(0,255,65,.1)}
+    .atm-input::placeholder{color:var(--muted)}
+    .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.6rem}
+    .atm-btn{padding:.75rem;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-family:'Exo 2',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s}
+    .atm-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,255,65,.05)}
+    .atm-btn:active{transform:scale(.96)}
+    .atm-btn.primary{background:var(--accent);color:#000;border-color:var(--accent);grid-column:span 2}
+    .atm-btn.primary:hover{background:var(--accent2)}
+    .atm-btn.danger{border-color:rgba(255,68,68,.3);color:var(--red)}
+    .atm-btn.full{grid-column:span 2}
+    .card-display{background:linear-gradient(135deg,#0d2a0d,#0a1a0a);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:.8rem}
+    .card-name{font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--muted);margin-bottom:.2rem}
+    .card-value{font-family:'Share Tech Mono',monospace;font-size:.88rem;color:var(--text);font-weight:700}
+    .card-balance{font-size:1.4rem;font-weight:900;color:var(--accent);margin-top:.3rem}
+    .tx-item{display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid var(--border);font-size:.75rem}
+    .tx-item:last-child{border-bottom:none}
+    .tx-type{color:var(--muted)}
+    .tx-amount.pos{color:var(--accent)}.tx-amount.neg{color:var(--red)}
+    .credit{margin-top:1.5rem;font-size:.68rem;color:var(--muted);text-align:center;font-family:'Share Tech Mono',monospace;position:relative;z-index:1}
+    .credit span{color:var(--accent)}
+    @keyframes fadeDown{from{opacity:0;transform:translateY(-15px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="cpp-badge">⚙️ c++ project</div>
+  <h1>ATM <span>System</span></h1>
+  <p class="subtitle">// banking simulation in c++</p>
+</div>
+<div class="atm">
+  <div class="atm-top">
+    <div class="atm-logo"><span></span> SECURE ATM v1.0</div>
+    <div class="atm-time" id="clock">--:--:--</div>
+  </div>
+  <div class="atm-screen"><div class="screen-content" id="screenContent">
+    <div class="screen-title">🏦 Welcome to ATM</div>
+    <div class="screen-line">Built by: Farhana Akter Mim</div>
+    <div class="screen-line muted" style="margin-top:.8rem">Demo Accounts:</div>
+    <div class="screen-line info">ACC-001 | PIN: 1234 | $5,000</div>
+    <div class="screen-line info">ACC-002 | PIN: 5678 | $3,200</div>
+    <div class="screen-line info">ACC-003 | PIN: 9012 | $7,500</div>
+    <div class="screen-line muted" style="margin-top:.8rem">Enter account number below</div>
+  </div></div>
+  <div class="atm-keypad" id="keypad">
+    <div class="input-row"><input class="atm-input" id="mainInput" placeholder="Account number e.g. ACC-001" maxlength="7"/></div>
+    <div class="btn-row"><button class="atm-btn primary" onclick="handleLogin()">Login →</button></div>
+  </div>
+</div>
+<div class="credit">Built by <span>Farhana Akter Mim</span> · C++ Project</div>
+<script>
+const accounts=[
+  {num:'ACC-001',name:'Farhana Akter Mim',pin:'1234',balance:5000,history:[]},
+  {num:'ACC-002',name:'Rahim Uddin',pin:'5678',balance:3200,history:[]},
+  {num:'ACC-003',name:'Priya Sen',pin:'9012',balance:7500,history:[]},
+];
+let current=null;
+setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString()},1000);
+document.getElementById('clock').textContent=new Date().toLocaleTimeString();
+function fmt(n){'use strict';return'$'+parseFloat(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')}
+function setScreen(h){document.getElementById('screenContent').innerHTML=h}
+function setKeypad(h){document.getElementById('keypad').innerHTML=h}
+function handleLogin(){
+  const val=document.getElementById('mainInput').value.trim().toUpperCase();
+  const acc=accounts.find(a=>a.num===val);
+  if(!acc){setScreen('<div class="screen-title" style="color:var(--red)">❌ Not Found</div><div class="screen-line error">Account not found! Try ACC-001</div>');return}
+  current=acc;
+  setScreen('<div class="screen-title">🔐 Enter PIN</div><div class="screen-line">Account: '+acc.num+'</div><div class="screen-line muted">Enter your 4-digit PIN</div>');
+  setKeypad('<div class="input-row"><input class="atm-input" id="mainInput" type="password" placeholder="Enter PIN..." maxlength="4"/></div><div class="btn-row"><button class="atm-btn primary" onclick="handlePin()">Confirm →</button><button class="atm-btn danger full" onclick="goLogin()">← Cancel</button></div>');
+}
+function handlePin(){
+  const pin=document.getElementById('mainInput').value.trim();
+  if(pin!==current.pin){setScreen('<div class="screen-title" style="color:var(--red)">❌ Wrong PIN</div><div class="screen-line error">Incorrect PIN. Please try again.</div>');return}
+  showMenu();
+}
+function showMenu(){
+  setScreen('<div class="screen-title">✅ Welcome!</div><div class="card-display"><div class="card-name">ACCOUNT HOLDER</div><div class="card-value">'+current.name+'</div><div class="card-name" style="margin-top:.3rem">ACCOUNT NUMBER</div><div class="card-value">'+current.num+'</div><div class="card-name" style="margin-top:.3rem">AVAILABLE BALANCE</div><div class="card-balance">'+fmt(current.balance)+'</div></div><div class="screen-line muted">Select an option below</div>');
+  setKeypad('<div class="btn-row"><button class="atm-btn" onclick="showBalance()">💰 Balance</button><button class="atm-btn" onclick="showDeposit()">⬆️ Deposit</button><button class="atm-btn" onclick="showWithdraw()">⬇️ Withdraw</button><button class="atm-btn" onclick="showTransfer()">🔄 Transfer</button><button class="atm-btn" onclick="showStatement()">📋 Statement</button><button class="atm-btn danger" onclick="goLogin()">🚪 Logout</button></div>');
+}
+function showBalance(){
+  setScreen('<div class="screen-title">💰 Account Balance</div><div class="screen-line">'+current.name+'</div><div class="screen-line">'+current.num+'</div><div class="screen-balance">'+fmt(current.balance)+'</div><div class="screen-line success" style="text-align:center">Available Balance</div>');
+  setKeypad('<div class="btn-row"><button class="atm-btn primary" onclick="showMenu()">← Back to Menu</button></div>');
+}
+function showDeposit(){
+  setScreen('<div class="screen-title">⬆️ Deposit Money</div><div class="screen-line">Current: '+fmt(current.balance)+'</div><div class="screen-line muted">Enter amount to deposit:</div>');
+  setKeypad('<div class="input-row"><input class="atm-input" id="mainInput" type="number" placeholder="Amount..." min="1"/></div><div class="btn-row"><button class="atm-btn primary" onclick="doDeposit()">Deposit ✓</button><button class="atm-btn danger full" onclick="showMenu()">← Cancel</button></div>');
+}
+function doDeposit(){
+  const amt=parseFloat(document.getElementById('mainInput').value);
+  if(!amt||amt<=0){alert('Enter valid amount!');return}
+  current.balance+=amt;
+  current.history.push({type:'Deposit',amount:amt,balance:current.balance,date:new Date().toLocaleDateString()});
+  setScreen('<div class="screen-title" style="color:var(--accent)">✅ Deposit Successful!</div><div class="screen-line success">Deposited: '+fmt(amt)+'</div><div class="screen-balance">'+fmt(current.balance)+'</div><div class="screen-line success" style="text-align:center">New Balance</div>');
+  setKeypad('<div class="btn-row"><button class="atm-btn primary" onclick="showMenu()">← Back to Menu</button></div>');
+}
+function showWithdraw(){
+  setScreen('<div class="screen-title">⬇️ Withdraw Money</div><div class="screen-line">Available: '+fmt(current.balance)+'</div><div class="screen-line muted">Enter amount to withdraw:</div>');
+  setKeypad('<div class="input-row"><input class="atm-input" id="mainInput" type="number" placeholder="Amount..." min="1"/></div><div class="btn-row"><button class="atm-btn primary" onclick="doWithdraw()">Withdraw ✓</button><button class="atm-btn danger full" onclick="showMenu()">← Cancel</button></div>');
+}
+function doWithdraw(){
+  const amt=parseFloat(document.getElementById('mainInput').value);
+  if(!amt||amt<=0){alert('Enter valid amount!');return}
+  if(amt>current.balance){setScreen('<div class="screen-title" style="color:var(--red)">❌ Insufficient Funds</div><div class="screen-line error">Not enough balance!</div><div class="screen-line">Available: '+fmt(current.balance)+'</div>');setKeypad('<div class="btn-row"><button class="atm-btn primary" onclick="showMenu()">← Back</button></div>');return}
+  current.balance-=amt;
+  current.history.push({type:'Withdraw',amount:-amt,balance:current.balance,date:new Date().toLocaleDateString()});
+  setScreen('<div class="screen-title" style="color:var(--accent)">✅ Withdrawal Successful!</div><div class="screen-line error">Withdrawn: '+fmt(amt)+'</div><div class="screen-balance">'+fmt(current.balance)+'</div><div class="screen-line success" style="text-align:center">Remaining Balance</div>');
+  setKeypad('<div class="btn-row"><button class="atm-btn primary" onclick="showMenu()">← Back to Menu</button></div>');
+}
+function showTransfer(){
+  setScreen('<div class="screen-title">🔄 Transfer Money</div><div class="screen-line">Your Balance: '+fmt(current.balance)+'</div><div class="screen-line info">Available: ACC-001, ACC-002, ACC-003</div>');
+  setKeypad('<div class="input-row"><input class="atm-input" id="targetInput" placeholder="Target account e.g. ACC-002" maxlength="7"/></div><div class="input-row"><input class="atm-input" id="mainInput" type="number" placeholder="Amount..."/></div><div class="btn-row"><button class="atm-btn primary" onclick="doTransfer()">Transfer ✓</button><button class="atm-btn danger full" onclick="showMenu()">← Cancel</button></div>');
+}
+function doTransfer(){
+  const tgt=document.getElementById('targetInput').value.trim().toUpperCase();
+  const amt=parseFloat(document.getElementById('mainInput').value);
+  const target=accounts.find(a=>a.num===tgt);
+  if(!target){alert('Target account not found!');return}
+  if(target.num===current.num){alert('Cannot transfer to yourself!');return}
+  if(!amt||amt<=0){alert('Enter valid amount!');return}
+  if(amt>current.balance){setScreen('<div class="screen-title" style="color:var(--red)">❌ Insufficient Funds</div><div class="screen-line error">Not enough balance!</div>');setKeypad('<div class="btn-row"><button class="atm-btn primary" onclick="showMenu()">← Back</button></div>');return}
+  current.balance-=amt;target.balance+=amt;
+  const d=new Date().toLocaleDateString();
+  current.history.push({type:'Transfer Out',amount:-amt,balance:current.balance,date:d});
+  target.history.push({type:'Transfer In',amount:amt,balance:target.balance,date:d});
+  setScreen('<div class="screen-title" style="color:var(--accent)">✅ Transfer Successful!</div><div class="screen-line">Sent: '+fmt(amt)+'</div><div class="screen-line">To: '+target.name+'</div><div class="screen-balance">'+fmt(current.balance)+'</div><div class="screen-line success" style="text-align:center">Your New Balance</div>');
+  setKeypad('<div class="btn-row"><button class="atm-btn primary" onclick="showMenu()">← Back to Menu</button></div>');
+}
+function showStatement(){
+  const tx=current.history.slice(-5).reverse();
+  const rows=tx.length?tx.map(t=>'<div class="tx-item"><span class="tx-type">'+t.type+'<br><span style="font-size:.68rem;color:var(--muted)">'+t.date+'</span></span><span class="tx-amount '+(t.amount>=0?'pos':'neg')+'">'+(t.amount>=0?'+':'')+fmt(Math.abs(t.amount))+'</span></div>').join(''):'<div class="screen-line muted">No transactions yet.</div>';
+  setScreen('<div class="screen-title">📋 Mini Statement</div><div class="screen-line">'+current.name+'</div><div style="margin-top:.5rem">'+rows+'</div><div class="screen-line" style="margin-top:.8rem;border-top:1px solid var(--border);padding-top:.5rem">Balance: <strong style="color:var(--accent)">'+fmt(current.balance)+'</strong></div>');
+  setKeypad('<div class="btn-row"><button class="atm-btn primary" onclick="showMenu()">← Back to Menu</button></div>');
+}
+function goLogin(){
+  current=null;
+  setScreen('<div class="screen-title">👋 Logged Out</div><div class="screen-line success">Thank you!</div><div class="screen-line muted" style="margin-top:.8rem">Enter account number to login again.</div>');
+  setKeypad('<div class="input-row"><input class="atm-input" id="mainInput" placeholder="Account number e.g. ACC-001" maxlength="7"/></div><div class="btn-row"><button class="atm-btn primary" onclick="handleLogin()">Login →</button></div>');
+}
+</script>
+</body>
+</html>
