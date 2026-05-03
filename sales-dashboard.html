@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sales Dashboard – Excel Project</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#f0f4ff;--surface:#fff;--accent:#1F4E79;--accent2:#2E75B6;--green:#70AD47;--orange:#ED7D31;--red:#C00000;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding:1.5rem 1rem 4rem}
+    .header{text-align:center;margin-bottom:2rem}
+    .excel-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(31,78,121,.1);border:1px solid rgba(31,78,121,.3);padding:.3rem .9rem;border-radius:20px;font-family:'DM Mono',monospace;font-size:.72rem;color:var(--accent);letter-spacing:.1em;margin-bottom:.8rem}
+    h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:800;letter-spacing:-.03em}
+    h1 span{color:var(--accent2)}
+    .subtitle{color:var(--muted);font-size:.88rem;margin-top:.3rem}
+    .container{max-width:1100px;margin:0 auto}
+    /* KPI */
+    .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+    .kpi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.5rem;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+    .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--kpi-color,var(--accent))}
+    .kpi-label{font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem}
+    .kpi-value{font-size:1.8rem;font-weight:800;color:var(--kpi-color,var(--accent));line-height:1}
+    .kpi-sub{font-size:.75rem;color:var(--muted);margin-top:.3rem;font-family:'DM Mono',monospace}
+    /* Charts grid */
+    .charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1rem}
+    .charts-grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+    .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.2rem;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+    .chart-title{font-size:.9rem;font-weight:700;margin-bottom:1rem;color:var(--text)}
+    .chart-wrap{position:relative;height:220px}
+    /* Table */
+    .table-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);margin-bottom:1rem}
+    .table-header{padding:1rem 1.2rem;font-size:.9rem;font-weight:700;background:var(--accent);color:#fff}
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:.82rem}
+    thead th{padding:.7rem 1rem;background:#1a3a5c;color:#fff;text-align:left;font-weight:600;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+    tbody tr:nth-child(even){background:#f5f8ff}
+    tbody tr:hover{background:#eef2ff}
+    tbody td{padding:.65rem 1rem;border-bottom:1px solid var(--border);color:var(--text)}
+    .badge{display:inline-block;padding:.15rem .5rem;border-radius:5px;font-size:.7rem;font-weight:600}
+    .badge-elec{background:rgba(68,114,196,.12);color:#4472C4}
+    .badge-furn{background:rgba(112,173,71,.12);color:#70AD47}
+    .badge-stat{background:rgba(237,125,49,.12);color:#ED7D31}
+    .credit{text-align:center;margin-top:2rem;font-size:.7rem;color:var(--muted);font-family:'DM Mono',monospace}
+    .credit span{color:var(--accent)}
+    @media(max-width:700px){.charts-grid,.charts-grid2{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="excel-badge">📊 excel & data analysis project</div>
+  <h1>Sales <span>Dashboard</span></h1>
+  <p class="subtitle">2024 Annual Sales Report — Built by Farhana Akter Mim</p>
+</div>
+<div class="container">
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi" style="--kpi-color:#1F4E79"><div class="kpi-label">Total Revenue</div><div class="kpi-value" id="kpiRev">—</div><div class="kpi-sub">All products 2024</div></div>
+    <div class="kpi" style="--kpi-color:#ED7D31"><div class="kpi-label">Total Orders</div><div class="kpi-value" id="kpiOrders">—</div><div class="kpi-sub">Across all regions</div></div>
+    <div class="kpi" style="--kpi-color:#70AD47"><div class="kpi-label">Total Profit</div><div class="kpi-value" id="kpiProfit">—</div><div class="kpi-sub">Net profit 2024</div></div>
+    <div class="kpi" style="--kpi-color:#C00000"><div class="kpi-label">Avg Order Value</div><div class="kpi-value" id="kpiAvg">—</div><div class="kpi-sub">Per transaction</div></div>
+  </div>
+  <!-- Charts row 1 -->
+  <div class="charts-grid">
+    <div class="chart-card"><div class="chart-title">📈 Monthly Revenue & Profit</div><div class="chart-wrap"><canvas id="monthlyChart"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">🥧 Revenue by Category</div><div class="chart-wrap"><canvas id="catChart"></canvas></div></div>
+  </div>
+  <!-- Charts row 2 -->
+  <div class="charts-grid2">
+    <div class="chart-card"><div class="chart-title">🌍 Revenue by Region</div><div class="chart-wrap"><canvas id="regionChart"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">👤 Top Salesperson Performance</div><div class="chart-wrap"><canvas id="salesChart"></canvas></div></div>
+  </div>
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-header">📋 Recent Sales Transactions</div>
+    <div class="table-wrap"><table><thead><tr><th>Order ID</th><th>Month</th><th>Product</th><th>Category</th><th>Revenue</th><th>Profit</th><th>Units</th><th>Region</th><th>Salesperson</th></tr></thead><tbody id="salesTable"></tbody></table></div>
+  </div>
+</div>
+<div class="credit">Built by <span>Farhana Akter Mim</span> · Excel & Data Analysis Project</div>
+
+<script>
+// Data
+const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const prods=[["Laptop","Electronics",1200,360],["Phone","Electronics",800,240],["Tablet","Electronics",600,180],["Desk","Furniture",400,120],["Chair","Furniture",250,75],["Monitor","Electronics",450,135],["Keyboard","Electronics",100,30],["Mouse","Electronics",60,18],["Notebook","Stationery",15,5],["Pen Set","Stationery",25,8]];
+const regions=["North","South","East","West"];
+const salesP=["Alice","Bob","Carlos","Diana","Emma","Farhana"];
+function seededRand(seed){let s=seed;return()=>{s=(s*9301+49297)%233280;return s/233280}}
+const rand=seededRand(42);
+const rows=[];
+for(let i=1;i<=48;i++){
+  const p=prods[Math.floor(rand()*prods.length)];
+  const units=Math.floor(rand()*9)+1;
+  const rev=Math.round(p[2]*units*(0.9+rand()*0.2)*100)/100;
+  const profit=Math.round(p[3]*units*(0.85+rand()*0.3)*100)/100;
+  rows.push({id:`ORD-${1000+i}`,month:months[(i-1)%12],prod:p[0],cat:p[1],rev,profit,units,region:regions[Math.floor(rand()*4)],sp:salesP[Math.floor(rand()*6)]});
+}
+// KPIs
+const totalRev=rows.reduce((s,r)=>s+r.rev,0);
+const totalProfit=rows.reduce((s,r)=>s+r.profit,0);
+const fmt=n=>'$'+n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+document.getElementById('kpiRev').textContent=fmt(totalRev);
+document.getElementById('kpiOrders').textContent=rows.length;
+document.getElementById('kpiProfit').textContent=fmt(totalProfit);
+document.getElementById('kpiAvg').textContent=fmt(totalRev/rows.length);
+// Monthly chart
+const mRevs=months.map(m=>rows.filter(r=>r.month===m).reduce((s,r)=>s+r.rev,0));
+const mProf=months.map(m=>rows.filter(r=>r.month===m).reduce((s,r)=>s+r.profit,0));
+new Chart(document.getElementById('monthlyChart'),{type:'bar',data:{labels:months,datasets:[{label:'Revenue',data:mRevs,backgroundColor:'rgba(31,78,121,.8)',borderRadius:4},{label:'Profit',data:mProf,backgroundColor:'rgba(112,173,71,.8)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'$'+v.toLocaleString()}}}}});
+// Category pie
+const cats=["Electronics","Furniture","Stationery"];
+const catRevs=cats.map(c=>rows.filter(r=>r.cat===c).reduce((s,r)=>s+r.rev,0));
+new Chart(document.getElementById('catChart'),{type:'doughnut',data:{labels:cats,datasets:[{data:catRevs,backgroundColor:['#4472C4','#70AD47','#ED7D31'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
+// Region bar
+const regRevs=regions.map(r=>rows.filter(d=>d.region===r).reduce((s,d)=>s+d.rev,0));
+new Chart(document.getElementById('regionChart'),{type:'bar',data:{labels:regions,datasets:[{label:'Revenue',data:regRevs,backgroundColor:['#1F4E79','#2E75B6','#70AD47','#C00000'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'$'+v.toLocaleString()}}}}});
+// Salesperson
+const spRevs=salesP.map(s=>rows.filter(r=>r.sp===s).reduce((a,r)=>a+r.rev,0));
+new Chart(document.getElementById('salesChart'),{type:'bar',data:{labels:salesP,datasets:[{label:'Revenue',data:spRevs,backgroundColor:'rgba(46,117,182,.8)',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{callback:v=>'$'+v.toLocaleString()}}}}});
+// Table (last 15 rows)
+const catClass={Electronics:'badge-elec',Furniture:'badge-furn',Stationery:'badge-stat'};
+document.getElementById('salesTable').innerHTML=rows.slice(-15).reverse().map(r=>`<tr><td><strong>${r.id}</strong></td><td>${r.month}</td><td>${r.prod}</td><td><span class="badge ${catClass[r.cat]}">${r.cat}</span></td><td><strong>${fmt(r.rev)}</strong></td><td style="color:#70AD47">${fmt(r.profit)}</td><td>${r.units}</td><td>${r.region}</td><td>${r.sp}</td></tr>`).join('');
+</script>
+</body>
+</html>
